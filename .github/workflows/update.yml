@@ -26,6 +26,9 @@ jobs:
       
       - name: Validate composer.json and install
         run: composer validate && composer install
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Run test
         run: ./vendor/bin/test
