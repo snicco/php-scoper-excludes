@@ -30,7 +30,7 @@ jobs:
       - name: Run test
         run: |
           php bin/test
-          touch test.test
+          touch "`date +'%d.%b.%Y, %H:%M:%S'`"""
 
       - name: Git stuff
         run: |
