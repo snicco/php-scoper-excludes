@@ -1,0 +1,30 @@
+name: Update
+on:
+  workflow_dispatch:
+
+env:
+  PHP_VER: '7.4'
+
+jobs:
+  Update:
+    name: Update
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP ${{env.PHP_VER}}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{env.PHP_VER}}
+          tools: composer:v2
+        env:
+          fail-fast: true
+      
+      - name: Validate composer.json and install
+        run: composer validate && composer install
+
+      - name: Run test
+        run: ./vendor/bin/test
