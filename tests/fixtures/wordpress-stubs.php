@@ -13,12 +13,12 @@ namespace
     {
     }
     
-    trait FooTrait
+    interface FooInterface
     {
     
     }
     
-    trait BarTrait
+    trait FooTrait
     {
     
     }
@@ -27,12 +27,22 @@ namespace
     
     define('DB_USER', 'foo');
     
+    trait BarTrait
+    {
+    
+    }
+    
     class WP_User
     {
     
     }
     
     class WP_Error
+    {
+    
+    }
+    
+    abstract class AbstractTest
     {
     
     }

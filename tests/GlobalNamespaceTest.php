@@ -21,7 +21,7 @@ final class GlobalNamespaceTest extends TestCase
     protected function setUp() :void
     {
         parent::setUp();
-        $this->stub = __DIR__.'/fixtures/wordpress-stubs.php';
+        $this->stub = __DIR__.'/fixtures/wp-cli-stubs.php';
         $this->dump_to = __DIR__.'/dump';
         $this->cleanDir();
     }
@@ -33,9 +33,9 @@ final class GlobalNamespaceTest extends TestCase
     }
     
     /** @test */
-    public function functions_in_the_global_namespace_are_parsed_correctly()
+    public function functions_in_the_custom_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wordpress-functions.php';
+        $expected_path = $this->dump_to.'/exclude-wp-cli-functions.php';
         
         $dumper = new FileDumper([$this->stub]);
         
@@ -48,15 +48,15 @@ final class GlobalNamespaceTest extends TestCase
         $functions = require_once $expected_path;
         
         $this->assertSame([
-            'foo',
-            'bar',
+            'WP_CLI\\foo_func',
+            'WP_CLI\\Utils\\wp_not_installed',
         ], $functions);
     }
     
     /** @test */
-    public function classes_in_the_global_namespace_are_parsed_correctly()
+    public function classes_in_the_custom_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wordpress-classes.php';
+        $expected_path = $this->dump_to.'/exclude-wp-cli-classes.php';
         
         $dumper = new FileDumper([$this->stub]);
         
@@ -69,15 +69,16 @@ final class GlobalNamespaceTest extends TestCase
         $classes = require_once $expected_path;
         
         $this->assertSame([
-            'WP_User',
-            'WP_Error',
+            'WP_CLI\\Autoloader',
+            'WP_CLI\\Bootstrap\\BootstrapInterface',
+            'WP_CLI\\Bootstrap\\AutoloaderStep',
         ], $classes);
     }
     
     /** @test */
-    public function constants_in_the_global_namespace_are_parsed_correctly()
+    public function constants_in_the_custom_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wordpress-constants.php';
+        $expected_path = $this->dump_to.'/exclude-wp-cli-constants.php';
         
         $dumper = new FileDumper([$this->stub]);
         
@@ -90,15 +91,16 @@ final class GlobalNamespaceTest extends TestCase
         $classes = require_once $expected_path;
         
         $this->assertSame([
-            'DB_NAME',
-            'DB_USER',
+            'FOO',
+            'WP_CLI\\BAZ',
+            'WP_CLI\\Utils\\BAM',
         ], $classes);
     }
     
     /** @test */
-    public function traits_in_the_global_namespace_are_parsed_correctly()
+    public function traits_in_the_custom_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wordpress-traits.php';
+        $expected_path = $this->dump_to.'/exclude-wp-cli-traits.php';
         
         $dumper = new FileDumper([$this->stub]);
         
@@ -111,8 +113,8 @@ final class GlobalNamespaceTest extends TestCase
         $classes = require_once $expected_path;
         
         $this->assertSame([
-            'FooTrait',
-            'BarTrait',
+            'WP_CLI\\FooTrait',
+            'WP_CLI\\Bootstrap\\BarTrait',
         ], $classes);
     }
     

@@ -29,6 +29,7 @@ final class FileDumper
     const STMT_CONST = 'Stmt_Const';
     const STMT_TRAIT = 'Stmt_Trait';
     const STMT_EXPRESSION = 'Stmt_Expression';
+    const STMT_INTERFACE = 'Stmt_Interface';
     
     /**
      * @var string[]
@@ -76,7 +77,10 @@ final class FileDumper
                 }
                 
                 if (isset($statement->namespacedName)) {
-                    $identifiers[basename($file)][$statement->getType()][] =
+                    $type = $statement->getType();
+                    $type = (self::STMT_INTERFACE === $type) ? self::STMT_CLASS : $type;
+                    
+                    $identifiers[basename($file)][$type][] =
                         (string) $statement->namespacedName;
                     continue;
                 }
@@ -140,11 +144,20 @@ final class FileDumper
             self::STMT_CLASS,
             self::STMT_FUNCTION,
             self::STMT_CONST,
+            self::STMT_INTERFACE,
         ], true)) {
             return true;
         }
         
         if (self::STMT_EXPRESSION === $statement->getType()) {
+            if ( ! isset($statement->expr)) {
+                return false;
+            }
+            
+            if ( ! isset($statement->expr->name)) {
+                return false;
+            }
+            
             if ((string) $statement->expr->name === 'define') {
                 return true;
             }
@@ -159,11 +172,12 @@ final class FileDumper
         switch ($key) {
             case self::STMT_FUNCTION:
                 return $root_dir."/exclude-$file_basename-functions.php";
-            case self::STMT_CLASS;
+            case self::STMT_CLASS:
+            case self::STMT_INTERFACE:
                 return $root_dir."/exclude-$file_basename-classes.php";
-            case self::STMT_CONST;
+            case self::STMT_CONST:
                 return $root_dir."/exclude-$file_basename-constants.php";
-            case self::STMT_TRAIT;
+            case self::STMT_TRAIT:
                 return $root_dir."/exclude-$file_basename-traits.php";
             default:
                 throw new RuntimeException("Unknown key [$key].");
