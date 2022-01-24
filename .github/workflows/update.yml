@@ -26,9 +26,17 @@ jobs:
       
       - name: Validate composer.json and install
         run: composer validate && composer install
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
 
       - name: Run test
-        run: ./vendor/bin/test
+        run: |
+          php bin/test
+          touch test.test
+
+      - name: Git stuff
+        run: |
+          git status
+          git config --global user.email "calvin@snicco.de"
+          git config --global user.name "Calvin Alkan"
+          git config --global alias.snicco "!git add -A && git commit -m Update"
+          git snicco
+          git push

@@ -28,7 +28,6 @@
     }
   },
   "bin": [
-    "bin/generate-excludes",
-    "bin/test"
+    "bin/generate-excludes"
   ]
 }
