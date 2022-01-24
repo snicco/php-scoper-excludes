@@ -1,6 +1,7 @@
 name: Update
 on:
   workflow_dispatch:
+  push:
 
 env:
   PHP_VER: '7.4'
