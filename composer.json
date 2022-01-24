@@ -1,0 +1,32 @@
+{
+  "name": "sniccowp/php-scoper-wordpress-exclude",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Calvin Alkan",
+      "email": "calvin@snicco.de"
+    }, {
+      "name": "Marlon Alkan",
+      "email": "calvin@snicco.de"
+    }
+  ],
+  "require": {
+    "php": "^7.4"
+  },
+  "require-dev": {
+    "nikic/php-parser": "^4.0.0",
+    "php-stubs/wordpress-stubs": "^5.0.0",
+    "php-stubs/woocommerce-stubs": "^6.0.0",
+    "php-stubs/wp-cli-stubs": "^2.0.0",
+    "humbug/php-scoper": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Snicco\\PHPScoperWPExludes\\" : "src"
+    }
+  },
+  "bin": [
+    "bin/generate-excludes"
+  ]
+}
