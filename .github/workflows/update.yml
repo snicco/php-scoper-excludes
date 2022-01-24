@@ -37,6 +37,6 @@ jobs:
           git status
           git config --global user.email "calvin@snicco.de"
           git config --global user.name "Calvin Alkan"
-          git config --global alias.snicco "!git add -A && git commit -m Update"
-          git snicco
+          git config --global alias.snicco "!git add -A && git commit -m"
+          git snicco "Update: `date +'%d.%b.%Y, %H:%M:%S'`"
           git push
