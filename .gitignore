@@ -1,2 +1,6 @@
 /composer.lock
 /vendor
+/.phpunit.cache
+/.phpunit.result.cache
+/tests/dump
+!/tests/dump/.gitkeep

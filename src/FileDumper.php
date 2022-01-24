@@ -4,33 +4,41 @@ declare(strict_types=1);
 
 namespace Snicco\PHPScoperWPExludes;
 
+use PhpParser\Node;
 use RuntimeException;
-use PhpParser\Node\Stmt;
 use PhpParser\ParserFactory;
+use PhpParser\NodeTraverser;
 use InvalidArgumentException;
+use PhpParser\NodeVisitor\NameResolver;
 
+use function is_dir;
+use function in_array;
+use function basename;
+use function var_export;
 use function is_readable;
 use function array_merge;
+use function str_replace;
 use function file_get_contents;
+use function file_put_contents;
 
 final class FileDumper
 {
     
-    private array $extract_statements = [
-        'Stmt_Class',
-        'Stmt_Interface',
-        'Stmt_Trait',
-        'Stmt_Function'
-    ];
+    const STMT_FUNCTION = 'Stmt_Function';
+    const STMT_CLASS = 'Stmt_Class';
+    const STMT_CONST = 'Stmt_Const';
+    const STMT_TRAIT = 'Stmt_Trait';
+    const STMT_EXPRESSION = 'Stmt_Expression';
     
     /**
      * @var string[]
      */
     private array $files;
     
-    public function __construct(array $files) {
+    public function __construct(array $files)
+    {
         foreach ($files as $file) {
-            if(!is_readable($file)){
+            if ( ! is_readable($file)) {
                 throw new InvalidArgumentException("file [$file] is not readable.");
             }
         }
@@ -39,20 +47,67 @@ final class FileDumper
     
     public function dumpExludes(string $root_dir) :void
     {
+        if ( ! is_dir($root_dir)) {
+            throw new RuntimeException("$root_dir is not a directory.");
+        }
+        
         $identifiers = [];
+        
         foreach ($this->files as $file) {
             $content = file_get_contents($file);
             
-            if(false === $content){
+            if (false === $content) {
                 throw new RuntimeException("Cant read file contents of file [$file].");
             }
             
             $ast = $this->generateAst($content);
-            $res = $this->extractIdentifiersFromAst($ast);
-            $identifiers = array_merge($identifiers,$res);
+            
+            $name_resolver = new NameResolver();
+            $node_traverser = new NodeTraverser();
+            $node_traverser->addVisitor($name_resolver);
+            
+            $ast = $node_traverser->traverse($ast);
+            
+            $statements = $this->flattenAst($ast);
+            
+            foreach ($statements as $statement) {
+                if ( ! $this->isOfInterest($statement)) {
+                    continue;
+                }
+                
+                if (isset($statement->namespacedName)) {
+                    $identifiers[basename($file)][$statement->getType()][] =
+                        (string) $statement->namespacedName;
+                    continue;
+                }
+                if (isset($statement->consts)) {
+                    foreach ($statement->consts as $const) {
+                        $identifiers[basename($file)][$statement->getType()][] =
+                            (string) $const->namespacedName;
+                    }
+                    continue;
+                }
+                if (isset($statement->expr)) {
+                    $identifiers[basename($file)][self::STMT_CONST][] =
+                        (string) $statement->expr->args[0]->value->value;
+                }
+            }
         }
-    
-        $foo = 'bar';
+        
+        foreach ($identifiers as $base_name => $types) {
+            foreach ($types as $type => $excludes) {
+                $name = $this->getFileName($type, $base_name, $root_dir);
+                
+                $success = file_put_contents(
+                    $name,
+                    '<?php return '.var_export($excludes, true).';'
+                );
+                
+                if (false === $success) {
+                    throw new RuntimeException("Could not dump contents for file [$base_name].");
+                }
+            }
+        }
     }
     
     private function generateAst(string $content) :array
@@ -62,31 +117,57 @@ final class FileDumper
     }
     
     /**
-     * @param  Stmt[]  $ast
+     * @param  Node[]  $ast
      *
+     * @return array
      */
-    protected function extractIdentifiersFromAst(array $ast) :array
+    private function flattenAst(array $ast) :array
     {
-        $globals = [];
-        $items = $ast;
+        $res = [];
         
-        while (count($items) > 0) {
-            
-            $item = array_pop($items);
-            
-            if (isset($item->stmts)) {
-                $items = array_merge($items, $item->stmts);
-            }
-            
-            if (in_array($item->getType(), $this->extract_statements)) {
-                $name = $item->name;
-                $string = $name->toString();
-                $globals[] = $item->name;
+        foreach ($ast as $statement) {
+            if (isset($statement->stmts)) {
+                $res = array_merge($res, $statement->stmts);
             }
         }
-        
-        return $globals;
+        return $res;
     }
     
+    private function isOfInterest(Node $statement) :bool
+    {
+        if (in_array($statement->getType(), [
+            self::STMT_TRAIT,
+            self::STMT_CLASS,
+            self::STMT_FUNCTION,
+            self::STMT_CONST,
+        ], true)) {
+            return true;
+        }
+        
+        if (self::STMT_EXPRESSION === $statement->getType()) {
+            if ((string) $statement->expr->name === 'define') {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private function getFileName(string $key, string $file_basename, string $root_dir) :string
+    {
+        $file_basename = str_replace('-stubs.php', '', $file_basename);
+        $file_basename = str_replace('.php', '', $file_basename);
+        switch ($key) {
+            case self::STMT_FUNCTION:
+                return $root_dir."/exclude-$file_basename-functions.php";
+            case self::STMT_CLASS;
+                return $root_dir."/exclude-$file_basename-classes.php";
+            case self::STMT_CONST;
+                return $root_dir."/exclude-$file_basename-constants.php";
+            case self::STMT_TRAIT;
+                return $root_dir."/exclude-$file_basename-traits.php";
+            default:
+                throw new RuntimeException("Unknown key [$key].");
+        }
+    }
     
 }
