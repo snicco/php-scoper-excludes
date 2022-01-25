@@ -115,7 +115,7 @@ The generated exclusion lists would be:
 After generating your necessary files you can use them in combination with
 [excluded-symbols feature](https://github.com/humbug/php-scoper#excluded-symbols).
 
-We already generate exclusion lists for WordPress, WP-CLI and WooCommerce. You can find them here:
+We already generated exclusion lists for WordPress, WP-CLI and WooCommerce. You can find them here:
 
 - [sniccowp/php-scoper-wordpress-excludes](https://github.com/sniccowp/php-scoper-wordpress-excludes)
 - [sniccowp/php-scoper-wp-cli-excludes](https://github.com/sniccowp/php-scoper-wp-cli-excludes)
