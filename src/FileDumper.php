@@ -6,10 +6,9 @@ namespace Snicco\PHPScoperWPExludes;
 
 use PhpParser\Node;
 use RuntimeException;
-use PhpParser\ParserFactory;
+use PhpParser\Parser;
 use PhpParser\NodeTraverser;
 use InvalidArgumentException;
-use PhpParser\Lexer\Emulative;
 use PhpParser\NodeVisitor\NameResolver;
 
 use function is_dir;
@@ -36,10 +35,10 @@ final class FileDumper
     const STMT_EXPRESSION = 'Stmt_Expression';
     const STMT_INTERFACE = 'Stmt_Interface';
     
-    private \PhpParser\Parser $parser;
-    private string            $root_dir;
+    private Parser $parser;
+    private string $root_dir;
     
-    public function __construct(Emulative $lexer, string $root_dir)
+    public function __construct(Parser $parser, string $root_dir)
     {
         if ( ! is_dir($root_dir)) {
             throw new InvalidArgumentException("Directory [$root_dir] does not exist.");
@@ -49,7 +48,7 @@ final class FileDumper
             throw new InvalidArgumentException("Directory [$root_dir] is not writable.");
         }
         
-        $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, $lexer);
+        $this->parser = $parser;
         $this->root_dir = $root_dir;
     }
     

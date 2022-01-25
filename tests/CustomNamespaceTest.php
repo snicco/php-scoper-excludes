@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Snicco\PHPScoperWPExludes\Tests;
 
+use PhpParser\ParserFactory;
 use InvalidArgumentException;
 use PhpParser\Lexer\Emulative;
 use PHPUnit\Framework\TestCase;
@@ -18,8 +19,9 @@ use function is_file;
 final class CustomNamespaceTest extends TestCase
 {
     
-    private string $stub;
-    private string $dump_to;
+    private string     $stub;
+    private string     $dump_to;
+    private FileDumper $dumper;
     
     protected function setUp() :void
     {
@@ -27,7 +29,11 @@ final class CustomNamespaceTest extends TestCase
         $this->stub = __DIR__.'/fixtures/wp-cli-stubs.php';
         $this->dump_to = __DIR__.'/dump';
         $this->cleanDir();
-        $this->dumper = new FileDumper(new Emulative(['phpVersion' => '8.0']), $this->dump_to);
+        $parser = (new ParserFactory())->create(
+            ParserFactory::PREFER_PHP7,
+            new Emulative(['phpVersion' => '8.0'])
+        );
+        $this->dumper = new FileDumper($parser, $this->dump_to);
     }
     
     protected function tearDown() :void
@@ -42,7 +48,12 @@ final class CustomNamespaceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Directory [$this->dump_to/bogus] does not exist.");
         
-        new FileDumper(new Emulative(['phpVersion' => '8.0']), $this->dump_to.'/bogus');
+        $parser = (new ParserFactory())->create(
+            ParserFactory::PREFER_PHP7,
+            new Emulative(['phpVersion' => '8.0'])
+        );
+        
+        $d = new FileDumper($parser, $this->dump_to.'/bogus');
     }
     
     /** @test */

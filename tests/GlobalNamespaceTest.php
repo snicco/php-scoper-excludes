@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Snicco\PHPScoperWPExludes\Tests;
 
+use PhpParser\ParserFactory;
 use PhpParser\Lexer\Emulative;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Finder;
@@ -25,7 +26,13 @@ final class GlobalNamespaceTest extends TestCase
         parent::setUp();
         $this->stub = __DIR__.'/fixtures/wordpress-stubs.php';
         $this->dump_to = __DIR__.'/dump';
-        $this->dumper = new FileDumper(new Emulative(['phpVersion' => '8.0']), $this->dump_to);
+        
+        $parser = (new ParserFactory())->create(
+            ParserFactory::PREFER_PHP7,
+            new Emulative(['phpVersion' => '8.0'])
+        );
+        $this->dumper = new FileDumper($parser, $this->dump_to);
+        
         $this->cleanDir();
     }
     
