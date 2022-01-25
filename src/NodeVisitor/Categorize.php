@@ -9,6 +9,9 @@ use PhpParser\Node;
 use RuntimeException;
 use PhpParser\NodeVisitorAbstract;
 
+/**
+ * @internal
+ */
 final class Categorize extends NodeVisitorAbstract
 {
     
@@ -16,6 +19,11 @@ final class Categorize extends NodeVisitorAbstract
      * @var string[]
      */
     private array $classes = [];
+    
+    /**
+     * @var string[]
+     */
+    private array $interfaces = [];
     
     /**
      * @var string[]
@@ -40,8 +48,12 @@ final class Categorize extends NodeVisitorAbstract
     
     public function leaveNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Interface_) {
+        if ($node instanceof Node\Stmt\Class_) {
             $this->addClassNames($node);
+            return;
+        }
+        if ($node instanceof Node\Stmt\Interface_) {
+            $this->addInterfaceNames($node);
             return;
         }
         if ($node instanceof Node\Stmt\Function_) {
@@ -84,6 +96,11 @@ final class Categorize extends NodeVisitorAbstract
         return $this->constants;
     }
     
+    public function interfaces() :array
+    {
+        return $this->interfaces;
+    }
+    
     private function reset()
     {
         $this->classes = [];
@@ -92,7 +109,7 @@ final class Categorize extends NodeVisitorAbstract
         $this->constants = [];
     }
     
-    private function addClassNames($node) :void
+    private function addClassNames(Node $node) :void
     {
         if ( ! isset($node->namespacedName)) {
             throw new RuntimeException(
@@ -102,7 +119,7 @@ final class Categorize extends NodeVisitorAbstract
         $this->classes[] = $node->namespacedName->toString();
     }
     
-    private function addFunctionNames($node) :void
+    private function addFunctionNames(Node $node) :void
     {
         if ( ! isset($node->namespacedName)) {
             throw new RuntimeException(
@@ -112,7 +129,7 @@ final class Categorize extends NodeVisitorAbstract
         $this->functions[] = $node->namespacedName->toString();
     }
     
-    private function addTraitNames($node) :void
+    private function addTraitNames(Node $node) :void
     {
         if ( ! isset($node->namespacedName)) {
             throw new RuntimeException(
@@ -122,7 +139,7 @@ final class Categorize extends NodeVisitorAbstract
         $this->traits[] = $node->namespacedName->toString();
     }
     
-    private function addConstantNames($node) :void
+    private function addConstantNames(Node $node) :void
     {
         if (empty($node->consts)) {
             throw new RuntimeException("Constant declaration node has no constants.");
@@ -139,7 +156,7 @@ final class Categorize extends NodeVisitorAbstract
         }
     }
     
-    private function addDefineConstantNames($node) :void
+    private function addDefineConstantNames(Node $node) :void
     {
         if ( ! isset($node->expr->args)) {
             throw new RuntimeException("define() declaration has no constant name.");
@@ -154,6 +171,16 @@ final class Categorize extends NodeVisitorAbstract
                 $e
             );
         }
+    }
+    
+    private function addInterfaceNames(Node $node)
+    {
+        if ( ! isset($node->namespacedName)) {
+            throw new RuntimeException(
+                'Interface node was expected to be a namespacedName attribute.'
+            );
+        }
+        $this->interfaces[] = $node->namespacedName->toString();
     }
     
 }

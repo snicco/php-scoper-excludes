@@ -8,7 +8,7 @@ use PhpParser\ParserFactory;
 use PhpParser\Lexer\Emulative;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Finder;
-use Snicco\PHPScoperWPExludes\FileDumper;
+use Snicco\PHPScoperWPExludes\ExclusionListGenerator;
 
 use function is_dir;
 use function unlink;
@@ -17,9 +17,9 @@ use function is_file;
 final class GlobalNamespaceTest extends TestCase
 {
     
-    private string     $stub;
-    private string     $dump_to;
-    private FileDumper $dumper;
+    private string                 $stub;
+    private string                 $dump_to;
+    private ExclusionListGenerator $dumper;
     
     protected function setUp() :void
     {
@@ -31,7 +31,7 @@ final class GlobalNamespaceTest extends TestCase
             ParserFactory::PREFER_PHP7,
             new Emulative(['phpVersion' => '8.0'])
         );
-        $this->dumper = new FileDumper($parser, $this->dump_to);
+        $this->dumper = new ExclusionListGenerator($parser, $this->dump_to);
         
         $this->cleanDir();
     }
@@ -49,7 +49,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpExludes($this->stub);
+        $this->dumper->dumpForFile($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -69,7 +69,27 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpExludes($this->stub);
+        $this->dumper->dumpForFile($this->stub);
+        
+        $this->assertTrue(is_file($expected_path));
+        
+        $functions = require_once $expected_path;
+        
+        $this->assertSame([
+            'WP_User',
+            'WP_Error',
+            'AbstractTest',
+        ], $functions);
+    }
+    
+    /** @test */
+    public function interfaces_in_the_global_namespace_are_parsed_correctly()
+    {
+        $expected_path = $this->dump_to.'/exclude-wordpress-interfaces.php';
+        
+        $this->assertFalse(is_file($expected_path));
+        
+        $this->dumper->dumpForFile($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -77,9 +97,6 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertSame([
             'FooInterface',
-            'WP_User',
-            'WP_Error',
-            'AbstractTest',
         ], $functions);
     }
     
@@ -90,7 +107,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpExludes($this->stub);
+        $this->dumper->dumpForFile($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -109,7 +126,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpExludes($this->stub);
+        $this->dumper->dumpForFile($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         

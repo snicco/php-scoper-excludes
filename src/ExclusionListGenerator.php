@@ -24,13 +24,17 @@ use function file_put_contents;
 
 use const PATHINFO_EXTENSION;
 
-final class FileDumper
+/**
+ * @api
+ */
+final class ExclusionListGenerator
 {
     
     const STMT_FUNCTION = 'function';
     const STMT_CLASS = 'class';
     const STMT_CONST = 'const';
     const STMT_TRAIT = 'trait';
+    const STMT_INTERFACE = 'interface';
     
     private Parser $parser;
     private string $root_dir;
@@ -49,7 +53,7 @@ final class FileDumper
         $this->root_dir = $root_dir;
     }
     
-    public function dumpExludes(string $file) :void
+    public function dumpForFile(string $file) :void
     {
         if ( ! is_readable($file)) {
             throw new InvalidArgumentException("File [$file] is not readable.");
@@ -100,6 +104,7 @@ final class FileDumper
         
         return [
             self::STMT_CLASS => $categorizing_visitor->classes(),
+            self::STMT_INTERFACE => $categorizing_visitor->interfaces(),
             self::STMT_FUNCTION => $categorizing_visitor->functions(),
             self::STMT_TRAIT => $categorizing_visitor->traits(),
             self::STMT_CONST => $categorizing_visitor->constants(),
@@ -115,6 +120,8 @@ final class FileDumper
                 return $this->root_dir."/exclude-$file_basename-functions.php";
             case self::STMT_CLASS:
                 return $this->root_dir."/exclude-$file_basename-classes.php";
+            case self::STMT_INTERFACE:
+                return $this->root_dir."/exclude-$file_basename-interfaces.php";
             case self::STMT_CONST:
                 return $this->root_dir."/exclude-$file_basename-constants.php";
             case self::STMT_TRAIT:

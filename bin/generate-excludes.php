@@ -11,6 +11,6 @@ $files = [
     //dirname(__DIR__).'/vendor/php-stubs/wp-cli-stubs/wp-cli-i18n-stubs.php',
 ];
 
-$dumper = new \Snicco\PHPScoperWPExludes\FileDumper($files);
+$dumper = new \Snicco\PHPScoperWPExludes\ExclusionListGenerator($files);
 
-$dumper->dumpExludes(dirname(__DIR__));
+$dumper->dumpForFile(dirname(__DIR__));

@@ -8,6 +8,9 @@ use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
+/**
+ * @internal
+ */
 final class Filter extends NodeVisitorAbstract
 {
     
