@@ -41,9 +41,7 @@ $application->setDefaultCommand($default->getName());
 
 $application->run();
 
-function autoload()
-{
-}
+
 
 
 
