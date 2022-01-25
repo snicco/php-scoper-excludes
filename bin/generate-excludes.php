@@ -1,16 +1,45 @@
 <?php
 
-require_once dirname(__DIR__).'/vendor/autoload.php';
+use Symfony\Component\Console\Application;
+use Snicco\PhpScoperExcludes\Console\GenerateConfig;
+use Snicco\PhpScoperExcludes\Console\GenerateExcludes;
 
-$files = [
-    dirname(__DIR__).'/vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php',
-    //dirname(__DIR__).'/vendor/php-stubs/wordpress-stubs/wordpress-stubs.php',
-    //dirname(__DIR__).'/vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php',
-    //dirname(__DIR__).'/vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php',
-    //dirname(__DIR__).'/vendor/php-stubs/wp-cli-stubs/wp-cli-commands-stubs.php',
-    //dirname(__DIR__).'/vendor/php-stubs/wp-cli-stubs/wp-cli-i18n-stubs.php',
-];
+autoload();
 
-$dumper = new \Snicco\PHPScoperWPExludes\ExclusionListGenerator($files);
+$application = new Application();
 
-$dumper->dumpForFile(dirname(__DIR__));
+$application->add(new GenerateConfig());
+$application->add($default = new GenerateExcludes());
+$application->setDefaultCommand($default->getName());
+
+$application->run();
+
+function autoload()
+{
+    $possibleAutoloadPaths = [
+        // dependency
+        dirname(__DIR__, 3).'/vendor/autoload.php',
+        // local
+        dirname(__DIR__).'/vendor/autoload.php',
+    ];
+    
+    $found = false;
+    foreach ($possibleAutoloadPaths as $possible_autoload_path) {
+        if (is_file($possible_autoload_path)) {
+            $found = true;
+            require_once $possible_autoload_path;
+        }
+    }
+    
+    if (false === $found) {
+        echo "Could not find vendor/autoload.php.\n";
+        echo "Tried:\n";
+        foreach ($possibleAutoloadPaths as $possible_autoload_path) {
+            echo $possible_autoload_path;
+            echo "\n";
+        }
+    }
+}
+
+
+

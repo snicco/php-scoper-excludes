@@ -54,6 +54,11 @@ namespace
     {
     
     }
+    
+    /**
+     * WordPress database abstraction object.
+     */
+    $wpdb = \null;
 }
 
 

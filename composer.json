@@ -15,7 +15,7 @@
   "require": {
     "php": "^7.4",
     "nikic/php-parser": "^4.0.0",
-    "symfony/console": "^5.4"
+    "symfony/console": "^5.0"
   },
   "require-dev": {
     "php-stubs/wordpress-stubs": "^5.0.0",

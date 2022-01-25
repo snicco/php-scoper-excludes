@@ -5,3 +5,5 @@
 /tests/dump
 !/tests/dump/.gitkeep
 .idea
+/generate-excludes.inc.php
+/excludes
