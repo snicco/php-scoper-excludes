@@ -1,6 +1,6 @@
 # A simple CLI tool to generate exclusion rules for PHP-Scoper.
 
-You put in any php file and get a several files that contain a list of fully-namespaced:
+You put in any PHP file and get out a several PHP files that contain a list of fully-namespaced:
 
 - class names
 - interface names
@@ -10,7 +10,7 @@ You put in any php file and get a several files that contain a list of fully-nam
 
 ## Example:
 
-Let's assume that you have the following stub file:
+Let's assume you have the following stub file:
 
 ````php
 namespace WP_CLI
@@ -112,7 +112,7 @@ The generated exclusion lists would be:
 
 ```
 
-After generating your necessary files you can use them in combination with
+After generating your necessary files you can use them in combination with php-scopers
 [excluded-symbols feature](https://github.com/humbug/php-scoper#excluded-symbols).
 
 We already generated exclusion lists for WordPress, WP-CLI and WooCommerce. You can find them here:
@@ -123,7 +123,7 @@ We already generated exclusion lists for WordPress, WP-CLI and WooCommerce. You 
 
 These are automatically generated using the published stubs from: https://github.com/php-stubs
 
-It's not a requirement to use stubs files. Any php code should work.
+It's however not a requirement to use stubs files. Any PHP code will work.
 
 ## Using
 
@@ -147,10 +147,15 @@ return [
     Option::EMULATE_PHP_VERSION => Option::PHP_8_0,
     Option::OUTPUT_DIR => __DIR__.'/excludes',
     Option::FILES => [
+    
         Finder::create()->files()
               ->in(__DIR__.'/vendor/php-stubs')
               ->depth('< 3')
               ->name('*.php'),
+              
+              __DIR__.'/foo.php',
+              
+              [__DIR__.'/bar.php', __DIR__.'/baz.php']
     ],
 ];
 ```
@@ -163,6 +168,7 @@ Using `symfony/finder` is totally optional. You can also provide a list of strin
 vendor/bin/generate-excludes
 ```
 
-### Credits:
+### Credits
 
-None of this would be possible without [nikic/php-parser.](https://github.com/nikic/PHP-Parser)
+None of this would be possible without the brilliant parser by Nikita
+Popov [nikic/php-parser.](https://github.com/nikic/PHP-Parser)
