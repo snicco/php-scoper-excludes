@@ -32,6 +32,13 @@ final class GenerateExcludes extends Command
 {
     
     protected static $defaultName = 'run';
+    private string   $repository_root;
+    
+    public function __construct(string $repository_root)
+    {
+        $this->repository_root = $repository_root;
+        parent::__construct();
+    }
     
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -39,7 +46,7 @@ final class GenerateExcludes extends Command
         
         $io->title("Generating exclusion lists.");
         
-        $config = getcwd().'/generate-excludes.inc.php';
+        $config = $this->repository_root.'/generate-excludes.inc.php';
         if ( ! is_file($config)) {
             $io->error([
                 "Configuration file not found at path [$config].",
