@@ -28,6 +28,14 @@ final class Filter extends NodeVisitorAbstract
         }
     }
     
+    public function leaveNode(Node $node) :?int
+    {
+        if ( ! $this->isOfInterest($node) && $node instanceof Node\Stmt) {
+            return NodeTraverser::REMOVE_NODE;
+        }
+        return null;
+    }
+    
     private function isOfInterest(Node $node) :bool
     {
         return $node instanceof Node\Stmt\Class_
