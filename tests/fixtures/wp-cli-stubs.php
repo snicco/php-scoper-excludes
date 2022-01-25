@@ -10,7 +10,11 @@ namespace WP_CLI
     
     class Autoloader
     {
-    
+        
+        public function foo()
+        {
+        }
+        
     }
     
     function foo_func()

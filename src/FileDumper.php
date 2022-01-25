@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Snicco\PHPScoperWPExludes;
 
-use PhpParser\Node;
 use RuntimeException;
 use PhpParser\Parser;
 use PhpParser\NodeTraverser;
 use InvalidArgumentException;
 use PhpParser\NodeVisitor\NameResolver;
+use Snicco\PHPScoperWPExludes\NodeVisitor\Filter;
+use Snicco\PHPScoperWPExludes\NodeVisitor\Categorize;
 
 use function is_dir;
-use function in_array;
-use function basename;
 use function pathinfo;
+use function basename;
 use function var_export;
-use function array_merge;
 use function str_replace;
 use function is_writable;
 use function is_readable;
@@ -28,12 +27,10 @@ use const PATHINFO_EXTENSION;
 final class FileDumper
 {
     
-    const STMT_FUNCTION = 'Stmt_Function';
-    const STMT_CLASS = 'Stmt_Class';
-    const STMT_CONST = 'Stmt_Const';
-    const STMT_TRAIT = 'Stmt_Trait';
-    const STMT_EXPRESSION = 'Stmt_Expression';
-    const STMT_INTERFACE = 'Stmt_Interface';
+    const STMT_FUNCTION = 'function';
+    const STMT_CLASS = 'class';
+    const STMT_CONST = 'const';
+    const STMT_TRAIT = 'trait';
     
     private Parser $parser;
     private string $root_dir;
@@ -64,132 +61,66 @@ final class FileDumper
             );
         }
         
-        $identifiers = [];
-        
         $content = file_get_contents($file);
-        
         if (false === $content) {
             throw new RuntimeException("Cant read file contents of file [$file].");
         }
         
-        $ast = $this->generateAst($content);
+        $exclude_list = $this->generateExcludeList($content);
         
-        $name_resolver = new NameResolver();
-        $node_traverser = new NodeTraverser();
-        $node_traverser->addVisitor($name_resolver);
+        $base_name = basename($file);
         
-        $ast = $node_traverser->traverse($ast);
-        
-        $statements = $this->flattenAst($ast);
-        
-        foreach ($statements as $statement) {
-            if ( ! $this->isOfInterest($statement)) {
-                continue;
-            }
+        foreach ($exclude_list as $type => $excludes) {
+            $name = $this->getFileName($type, $base_name);
             
-            if (isset($statement->namespacedName)) {
-                $type = $statement->getType();
-                $type = (self::STMT_INTERFACE === $type) ? self::STMT_CLASS : $type;
-                
-                $identifiers[basename($file)][$type][] =
-                    (string) $statement->namespacedName;
-                continue;
-            }
-            if (isset($statement->consts)) {
-                foreach ($statement->consts as $const) {
-                    $identifiers[basename($file)][$statement->getType()][] =
-                        (string) $const->namespacedName;
-                }
-                continue;
-            }
-            if (isset($statement->expr)) {
-                $identifiers[basename($file)][self::STMT_CONST][] =
-                    (string) $statement->expr->args[0]->value->value;
+            $success = file_put_contents(
+                $name,
+                '<?php return '.var_export($excludes, true).';'
+            );
+            
+            if (false === $success) {
+                throw new RuntimeException("Could not dump contents for file [$base_name].");
             }
         }
-        
-        foreach ($identifiers as $base_name => $types) {
-            foreach ($types as $type => $excludes) {
-                $name = $this->getFileName($type, $base_name, $this->root_dir);
-                
-                $success = file_put_contents(
-                    $name,
-                    '<?php return '.var_export($excludes, true).';'
-                );
-                
-                if (false === $success) {
-                    throw new RuntimeException("Could not dump contents for file [$base_name].");
-                }
-            }
-        }
-    }
-    
-    private function generateAst(string $content) :array
-    {
-        return $this->parser->parse($content);
     }
     
     /**
-     * @param  Node[]  $ast
-     *
-     * @return array
+     * @return array<string,string[]>
      */
-    private function flattenAst(array $ast) :array
+    private function generateExcludeList(string $file_contents) :array
     {
-        $res = [];
+        $node_traverser = new NodeTraverser();
+        $node_traverser->addVisitor(new Filter());
+        $node_traverser->addVisitor(new NameResolver());
+        // The order is important.
+        $node_traverser->addVisitor($categorizing_visitor = new Categorize());
         
-        foreach ($ast as $statement) {
-            if (isset($statement->stmts)) {
-                $res = array_merge($res, $statement->stmts);
-            }
-        }
-        return $res;
+        $ast = $this->parser->parse($file_contents);
+        $node_traverser->traverse($ast);
+        
+        return [
+            self::STMT_CLASS => $categorizing_visitor->classes(),
+            self::STMT_FUNCTION => $categorizing_visitor->functions(),
+            self::STMT_TRAIT => $categorizing_visitor->traits(),
+            self::STMT_CONST => $categorizing_visitor->constants(),
+        ];
     }
     
-    private function isOfInterest(Node $statement) :bool
-    {
-        if (in_array($statement->getType(), [
-            self::STMT_TRAIT,
-            self::STMT_CLASS,
-            self::STMT_FUNCTION,
-            self::STMT_CONST,
-            self::STMT_INTERFACE,
-        ], true)) {
-            return true;
-        }
-        
-        if (self::STMT_EXPRESSION === $statement->getType()) {
-            if ( ! isset($statement->expr)) {
-                return false;
-            }
-            
-            if ( ! isset($statement->expr->name)) {
-                return false;
-            }
-            
-            if ((string) $statement->expr->name === 'define') {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private function getFileName(string $key, string $file_basename, string $root_dir) :string
+    private function getFileName(string $key, string $file_basename) :string
     {
         $file_basename = str_replace('-stubs.php', '', $file_basename);
         $file_basename = str_replace('.php', '', $file_basename);
         switch ($key) {
             case self::STMT_FUNCTION:
-                return $root_dir."/exclude-$file_basename-functions.php";
+                return $this->root_dir."/exclude-$file_basename-functions.php";
             case self::STMT_CLASS:
-            case self::STMT_INTERFACE:
-                return $root_dir."/exclude-$file_basename-classes.php";
+                return $this->root_dir."/exclude-$file_basename-classes.php";
             case self::STMT_CONST:
-                return $root_dir."/exclude-$file_basename-constants.php";
+                return $this->root_dir."/exclude-$file_basename-constants.php";
             case self::STMT_TRAIT:
-                return $root_dir."/exclude-$file_basename-traits.php";
+                return $this->root_dir."/exclude-$file_basename-traits.php";
             default:
-                throw new RuntimeException("Unknown key [$key].");
+                throw new RuntimeException("Unknown exclude identifier [$key].");
         }
     }
     

@@ -43,7 +43,11 @@ namespace
     
     class WP_Error
     {
-    
+        
+        public function foo()
+        {
+        }
+        
     }
     
     abstract class AbstractTest
