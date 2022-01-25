@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Snicco\PHPScoperWPExludes\Tests;
+namespace Snicco\PhpScoperExcludes\Tests;
 
 use PhpParser\ParserFactory;
 use InvalidArgumentException;
 use PhpParser\Lexer\Emulative;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Finder;
-use Snicco\PHPScoperWPExludes\ExclusionListGenerator;
+use Snicco\PhpScoperExcludes\ExclusionListGenerator;
 
 use function touch;
 use function unlink;

@@ -1,21 +1,23 @@
 {
-  "name": "sniccowp/php-scoper-wordpress-exclude",
+  "name": "sniccowp/php-scoper-excludes",
   "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
     {
       "name": "Calvin Alkan",
       "email": "calvin@snicco.de"
-    }, {
+    },
+    {
       "name": "Marlon Alkan",
       "email": "calvin@snicco.de"
     }
   ],
   "require": {
-    "php": "^7.4"
+    "php": "^7.4",
+    "nikic/php-parser": "^4.0.0",
+    "symfony/console": "^5.4"
   },
   "require-dev": {
-    "nikic/php-parser": "^4.0.0",
     "php-stubs/wordpress-stubs": "^5.0.0",
     "php-stubs/woocommerce-stubs": "^6.0.0",
     "php-stubs/wp-cli-stubs": "^2.0.0",
@@ -25,12 +27,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Snicco\\PHPScoperWPExludes\\" : "src"
+      "Snicco\\PhpScoperExcludes\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Snicco\\PHPScoperWPExludes\\Tests\\" : "tests"
+      "Snicco\\PhpScoperExcludes\\Tests\\": "tests"
     }
   },
   "bin": [

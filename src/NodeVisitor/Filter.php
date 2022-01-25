@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Snicco\PHPScoperWPExludes\NodeVisitor;
+namespace Snicco\PhpScoperExcludes\NodeVisitor;
 
 use PhpParser\Node;
 use PhpParser\NodeTraverser;

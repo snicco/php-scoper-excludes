@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Snicco\PHPScoperWPExludes\Tests;
+namespace Snicco\PhpScoperExcludes\Tests;
 
 use PhpParser\ParserFactory;
 use PhpParser\Lexer\Emulative;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Finder;
-use Snicco\PHPScoperWPExludes\ExclusionListGenerator;
+use Snicco\PhpScoperExcludes\ExclusionListGenerator;
 
 use function is_dir;
 use function unlink;

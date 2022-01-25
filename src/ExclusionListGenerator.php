@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Snicco\PHPScoperWPExludes;
+namespace Snicco\PhpScoperExcludes;
 
 use RuntimeException;
 use PhpParser\Parser;
 use PhpParser\NodeTraverser;
 use InvalidArgumentException;
 use PhpParser\NodeVisitor\NameResolver;
-use Snicco\PHPScoperWPExludes\NodeVisitor\Filter;
-use Snicco\PHPScoperWPExludes\NodeVisitor\Categorize;
+use Snicco\PhpScoperExcludes\NodeVisitor\Filter;
+use Snicco\PhpScoperExcludes\NodeVisitor\Categorize;
 
 use function is_dir;
 use function pathinfo;
