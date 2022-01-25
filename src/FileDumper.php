@@ -15,12 +15,16 @@ use PhpParser\NodeVisitor\NameResolver;
 use function is_dir;
 use function in_array;
 use function basename;
+use function pathinfo;
 use function var_export;
-use function is_readable;
 use function array_merge;
 use function str_replace;
+use function is_writable;
+use function is_readable;
 use function file_get_contents;
 use function file_put_contents;
+
+use const PATHINFO_EXTENSION;
 
 final class FileDumper
 {
@@ -32,76 +36,82 @@ final class FileDumper
     const STMT_EXPRESSION = 'Stmt_Expression';
     const STMT_INTERFACE = 'Stmt_Interface';
     
-    /**
-     * @var string[]
-     */
-    private array $files;
+    private \PhpParser\Parser $parser;
+    private string            $root_dir;
     
-    public function __construct(array $files)
-    {
-        foreach ($files as $file) {
-            if ( ! is_readable($file)) {
-                throw new InvalidArgumentException("file [$file] is not readable.");
-            }
-        }
-        $this->files = $files;
-    }
-    
-    public function dumpExludes(string $root_dir) :void
+    public function __construct(Emulative $lexer, string $root_dir)
     {
         if ( ! is_dir($root_dir)) {
-            throw new RuntimeException("$root_dir is not a directory.");
+            throw new InvalidArgumentException("Directory [$root_dir] does not exist.");
+        }
+        
+        if ( ! is_writable($root_dir)) {
+            throw new InvalidArgumentException("Directory [$root_dir] is not writable.");
+        }
+        
+        $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, $lexer);
+        $this->root_dir = $root_dir;
+    }
+    
+    public function dumpExludes(string $file) :void
+    {
+        if ( ! is_readable($file)) {
+            throw new InvalidArgumentException("File [$file] is not readable.");
+        }
+        
+        if ('php' !== pathinfo($file, PATHINFO_EXTENSION)) {
+            throw new InvalidArgumentException(
+                "Only PHP files can be processed.\nCant process file [$file]."
+            );
         }
         
         $identifiers = [];
         
-        foreach ($this->files as $file) {
-            $content = file_get_contents($file);
-            
-            if (false === $content) {
-                throw new RuntimeException("Cant read file contents of file [$file].");
+        $content = file_get_contents($file);
+        
+        if (false === $content) {
+            throw new RuntimeException("Cant read file contents of file [$file].");
+        }
+        
+        $ast = $this->generateAst($content);
+        
+        $name_resolver = new NameResolver();
+        $node_traverser = new NodeTraverser();
+        $node_traverser->addVisitor($name_resolver);
+        
+        $ast = $node_traverser->traverse($ast);
+        
+        $statements = $this->flattenAst($ast);
+        
+        foreach ($statements as $statement) {
+            if ( ! $this->isOfInterest($statement)) {
+                continue;
             }
             
-            $ast = $this->generateAst($content);
-            
-            $name_resolver = new NameResolver();
-            $node_traverser = new NodeTraverser();
-            $node_traverser->addVisitor($name_resolver);
-            
-            $ast = $node_traverser->traverse($ast);
-            
-            $statements = $this->flattenAst($ast);
-            
-            foreach ($statements as $statement) {
-                if ( ! $this->isOfInterest($statement)) {
-                    continue;
-                }
+            if (isset($statement->namespacedName)) {
+                $type = $statement->getType();
+                $type = (self::STMT_INTERFACE === $type) ? self::STMT_CLASS : $type;
                 
-                if (isset($statement->namespacedName)) {
-                    $type = $statement->getType();
-                    $type = (self::STMT_INTERFACE === $type) ? self::STMT_CLASS : $type;
-                    
-                    $identifiers[basename($file)][$type][] =
-                        (string) $statement->namespacedName;
-                    continue;
+                $identifiers[basename($file)][$type][] =
+                    (string) $statement->namespacedName;
+                continue;
+            }
+            if (isset($statement->consts)) {
+                foreach ($statement->consts as $const) {
+                    $identifiers[basename($file)][$statement->getType()][] =
+                        (string) $const->namespacedName;
                 }
-                if (isset($statement->consts)) {
-                    foreach ($statement->consts as $const) {
-                        $identifiers[basename($file)][$statement->getType()][] =
-                            (string) $const->namespacedName;
-                    }
-                    continue;
-                }
-                if (isset($statement->expr)) {
-                    $identifiers[basename($file)][self::STMT_CONST][] =
-                        (string) $statement->expr->args[0]->value->value;
-                }
+                continue;
+            }
+            if (isset($statement->expr)) {
+                $identifiers[basename($file)][self::STMT_CONST][] =
+                    (string) $statement->expr->args[0]->value->value;
             }
         }
         
         foreach ($identifiers as $base_name => $types) {
             foreach ($types as $type => $excludes) {
-                $name = $this->getFileName($type, $base_name, $root_dir);
+                $name = $this->getFileName($type, $base_name, $this->root_dir);
                 
                 $success = file_put_contents(
                     $name,
@@ -117,11 +127,7 @@ final class FileDumper
     
     private function generateAst(string $content) :array
     {
-        $parser = (new ParserFactory)->create(
-            ParserFactory::PREFER_PHP7,
-            new Emulative(['phpVersion' => '8.0'])
-        );
-        return $parser->parse($content);
+        return $this->parser->parse($content);
     }
     
     /**

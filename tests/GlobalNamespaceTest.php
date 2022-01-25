@@ -4,25 +4,28 @@ declare(strict_types=1);
 
 namespace Snicco\PHPScoperWPExludes\Tests;
 
+use PhpParser\Lexer\Emulative;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Finder;
 use Snicco\PHPScoperWPExludes\FileDumper;
 
-use function unlink;
 use function is_dir;
+use function unlink;
 use function is_file;
 
 final class GlobalNamespaceTest extends TestCase
 {
     
-    private string $stub;
-    private string $dump_to;
+    private string     $stub;
+    private string     $dump_to;
+    private FileDumper $dumper;
     
     protected function setUp() :void
     {
         parent::setUp();
-        $this->stub = __DIR__.'/fixtures/wp-cli-stubs.php';
+        $this->stub = __DIR__.'/fixtures/wordpress-stubs.php';
         $this->dump_to = __DIR__.'/dump';
+        $this->dumper = new FileDumper(new Emulative(['phpVersion' => '8.0']), $this->dump_to);
         $this->cleanDir();
     }
     
@@ -35,87 +38,80 @@ final class GlobalNamespaceTest extends TestCase
     /** @test */
     public function functions_in_the_custom_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wp-cli-functions.php';
-        
-        $dumper = new FileDumper([$this->stub]);
+        $expected_path = $this->dump_to.'/exclude-wordpress-functions.php';
         
         $this->assertFalse(is_file($expected_path));
         
-        $dumper->dumpExludes($this->dump_to);
+        $this->dumper->dumpExludes($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
         $functions = require_once $expected_path;
         
         $this->assertSame([
-            'WP_CLI\\foo_func',
-            'WP_CLI\\Utils\\wp_not_installed',
+            'readonly',
+            'foo',
+            'bar',
         ], $functions);
     }
     
     /** @test */
-    public function classes_in_the_custom_namespace_are_parsed_correctly()
+    public function classes_in_the_global_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wp-cli-classes.php';
-        
-        $dumper = new FileDumper([$this->stub]);
+        $expected_path = $this->dump_to.'/exclude-wordpress-classes.php';
         
         $this->assertFalse(is_file($expected_path));
         
-        $dumper->dumpExludes($this->dump_to);
+        $this->dumper->dumpExludes($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
-        $classes = require_once $expected_path;
+        $functions = require_once $expected_path;
         
         $this->assertSame([
-            'WP_CLI\\Autoloader',
-            'WP_CLI\\Bootstrap\\BootstrapInterface',
-            'WP_CLI\\Bootstrap\\AutoloaderStep',
-        ], $classes);
+            'FooInterface',
+            'WP_User',
+            'WP_Error',
+            'AbstractTest',
+        ], $functions);
     }
     
     /** @test */
-    public function constants_in_the_custom_namespace_are_parsed_correctly()
+    public function traits_in_the_global_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wp-cli-constants.php';
-        
-        $dumper = new FileDumper([$this->stub]);
+        $expected_path = $this->dump_to.'/exclude-wordpress-traits.php';
         
         $this->assertFalse(is_file($expected_path));
         
-        $dumper->dumpExludes($this->dump_to);
+        $this->dumper->dumpExludes($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
-        $classes = require_once $expected_path;
+        $functions = require_once $expected_path;
         
         $this->assertSame([
-            'FOO',
-            'WP_CLI\\BAZ',
-            'WP_CLI\\Utils\\BAM',
-        ], $classes);
+            'FooTrait',
+            'BarTrait',
+        ], $functions);
     }
     
     /** @test */
-    public function traits_in_the_custom_namespace_are_parsed_correctly()
+    public function constants_in_the_global_namespace_are_parsed_correctly()
     {
-        $expected_path = $this->dump_to.'/exclude-wp-cli-traits.php';
-        
-        $dumper = new FileDumper([$this->stub]);
+        $expected_path = $this->dump_to.'/exclude-wordpress-constants.php';
         
         $this->assertFalse(is_file($expected_path));
         
-        $dumper->dumpExludes($this->dump_to);
+        $this->dumper->dumpExludes($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
-        $classes = require_once $expected_path;
+        $functions = require_once $expected_path;
         
         $this->assertSame([
-            'WP_CLI\\FooTrait',
-            'WP_CLI\\Bootstrap\\BarTrait',
-        ], $classes);
+            'DB_NAME',
+            'DB_USER',
+        ], $functions);
     }
     
     private function cleanDir()
