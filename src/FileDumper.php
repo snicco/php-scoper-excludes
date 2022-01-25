@@ -9,6 +9,7 @@ use RuntimeException;
 use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
 use InvalidArgumentException;
+use PhpParser\Lexer\Emulative;
 use PhpParser\NodeVisitor\NameResolver;
 
 use function is_dir;
@@ -116,7 +117,10 @@ final class FileDumper
     
     private function generateAst(string $content) :array
     {
-        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $parser = (new ParserFactory)->create(
+            ParserFactory::PREFER_PHP7,
+            new Emulative(['phpVersion' => '8.0'])
+        );
         return $parser->parse($content);
     }
     

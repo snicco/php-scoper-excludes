@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace
 {
     
+    function readonly()
+    {
+    }
+    
     function foo()
     {
     }

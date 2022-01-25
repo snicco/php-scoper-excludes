@@ -48,6 +48,7 @@ final class CustomNamespaceTest extends TestCase
         $functions = require_once $expected_path;
         
         $this->assertSame([
+            'readonly',
             'foo',
             'bar',
         ], $functions);
