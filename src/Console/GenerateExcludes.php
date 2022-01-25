@@ -60,6 +60,8 @@ final class GenerateExcludes extends Command
             return Command::FAILURE;
         }
         
+        $io->note("Normalizing files...");
+        
         $files = $this->normalizeFiles($files);
         $count = count($files);
         
@@ -68,17 +70,17 @@ final class GenerateExcludes extends Command
             return Command::SUCCESS;
         }
         
-        $generator = $this->newGenerator(
-            $config,
-            $output_dir = $config[Option::OUTPUT_DIR] ?? getcwd()
-        );
-        
         $io->info(
             sprintf(
-                "%s %s found. Starting to generate AST...",
+                '%s %s found. Starting to generate excludes...',
                 $count,
                 $count > 1 ? 'files' : 'file'
             )
+        );
+        
+        $generator = $this->newGenerator(
+            $config,
+            $output_dir = $config[Option::OUTPUT_DIR] ?? getcwd()
         );
         
         $progress_bar = $this->newProgressBar($output, $count);
@@ -142,7 +144,7 @@ final class GenerateExcludes extends Command
     {
         $progress_bar = new ProgressBar($output, $file_count);
         $progress_bar->setFormat(
-            ' %current%/%max% [%bar%] <info>%percent%%</info> %elapsed:6s% Processing: <info>(%message%)</info>'
+            ' %current%/%max% [%bar%] <info>%percent%%</info> %elapsed:6s% <info>(%message%)</info>'
         );
         $progress_bar->setRedrawFrequency(100);
         $progress_bar->maxSecondsBetweenRedraws(0.2);

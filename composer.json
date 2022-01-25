@@ -18,10 +18,6 @@
     "symfony/console": "^5.0"
   },
   "require-dev": {
-    "php-stubs/wordpress-stubs": "^5.0.0",
-    "php-stubs/woocommerce-stubs": "^6.0.0",
-    "php-stubs/wp-cli-stubs": "^2.0.0",
-    "humbug/php-scoper": "dev-master",
     "phpunit/phpunit": "^9.5",
     "symfony/finder": "^5.4"
   },
