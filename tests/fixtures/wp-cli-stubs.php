@@ -21,9 +21,11 @@ namespace WP_CLI
     {
     }
     
+    const BAZ = 'BIZ';
+    
     define('FOO', 'BAR');
     
-    const BAZ = 'BIZ';
+    const A = 'B';
 }
 
 namespace WP_CLI\Utils

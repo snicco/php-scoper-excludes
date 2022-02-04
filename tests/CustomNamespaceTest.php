@@ -149,6 +149,7 @@ final class CustomNamespaceTest extends TestCase
         
         $this->assertSame([
             'FOO',
+            'WP_CLI\\A',
             'WP_CLI\\BAZ',
             'WP_CLI\\Utils\\BAM',
         ], $classes);
@@ -168,8 +169,8 @@ final class CustomNamespaceTest extends TestCase
         $classes = require_once $expected_path;
         
         $this->assertSame([
-            'WP_CLI\\FooTrait',
             'WP_CLI\\Bootstrap\\BarTrait',
+            'WP_CLI\\FooTrait',
         ], $classes);
     }
     

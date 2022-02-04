@@ -9,6 +9,11 @@ use PhpParser\Node;
 use RuntimeException;
 use PhpParser\NodeVisitorAbstract;
 
+use function sort;
+
+use const SORT_NATURAL;
+use const SORT_FLAG_CASE;
+
 /**
  * @internal
  */
@@ -78,27 +83,37 @@ final class Categorize extends NodeVisitorAbstract
     
     public function classes() :array
     {
-        return $this->classes;
+        $copy = $this->classes;
+        sort($copy, SORT_NATURAL | SORT_FLAG_CASE);
+        return $copy;
     }
     
     public function functions() :array
     {
-        return $this->functions;
+        $copy = $this->functions;
+        sort($copy, SORT_NATURAL | SORT_FLAG_CASE);
+        return $copy;
     }
     
     public function traits() :array
     {
-        return $this->traits;
+        $copy = $this->traits;
+        sort($copy, SORT_NATURAL | SORT_FLAG_CASE);
+        return $copy;
     }
     
     public function constants() :array
     {
-        return $this->constants;
+        $copy = $this->constants;
+        sort($copy, SORT_NATURAL | SORT_FLAG_CASE);
+        return $copy;
     }
     
     public function interfaces() :array
     {
-        return $this->interfaces;
+        $copy = $this->interfaces;
+        sort($copy, SORT_NATURAL | SORT_FLAG_CASE);
+        return $copy;
     }
     
     private function reset()

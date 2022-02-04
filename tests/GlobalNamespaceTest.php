@@ -56,9 +56,9 @@ final class GlobalNamespaceTest extends TestCase
         $functions = require_once $expected_path;
         
         $this->assertSame([
-            'readonly',
-            'foo',
             'bar',
+            'foo',
+            'readonly',
         ], $functions);
     }
     
@@ -76,9 +76,9 @@ final class GlobalNamespaceTest extends TestCase
         $functions = require_once $expected_path;
         
         $this->assertSame([
-            'WP_User',
-            'WP_Error',
             'AbstractTest',
+            'WP_Error',
+            'WP_User',
         ], $functions);
     }
     
@@ -114,8 +114,8 @@ final class GlobalNamespaceTest extends TestCase
         $functions = require_once $expected_path;
         
         $this->assertSame([
-            'FooTrait',
             'BarTrait',
+            'FooTrait',
         ], $functions);
     }
     
