@@ -49,7 +49,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -69,7 +69,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -89,7 +89,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -107,7 +107,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -126,7 +126,7 @@ final class GlobalNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         

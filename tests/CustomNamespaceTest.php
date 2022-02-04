@@ -12,9 +12,9 @@ use Symfony\Component\Finder\Finder;
 use Snicco\PhpScoperExcludes\ExclusionListGenerator;
 
 use function touch;
-use function unlink;
-use function is_dir;
 use function is_file;
+use function json_decode;
+use function file_get_contents;
 
 final class CustomNamespaceTest extends TestCase
 {
@@ -62,7 +62,7 @@ final class CustomNamespaceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("File [$this->dump_to/foo.php] is not readable.");
         
-        $this->dumper->dumpForFile($this->dump_to.'/foo.php');
+        $this->dumper->dumpAsPhpArray($this->dump_to.'/foo.php');
     }
     
     /** @test */
@@ -75,7 +75,7 @@ final class CustomNamespaceTest extends TestCase
             "Only PHP files can be processed.\nCant process file [$this->dump_to/foo.json]."
         );
         
-        $this->dumper->dumpForFile($this->dump_to.'/foo.json');
+        $this->dumper->dumpAsPhpArray($this->dump_to.'/foo.json');
     }
     
     /** @test */
@@ -85,7 +85,7 @@ final class CustomNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -104,7 +104,7 @@ final class CustomNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -123,7 +123,7 @@ final class CustomNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -141,7 +141,7 @@ final class CustomNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -162,7 +162,7 @@ final class CustomNamespaceTest extends TestCase
         
         $this->assertFalse(is_file($expected_path));
         
-        $this->dumper->dumpForFile($this->stub);
+        $this->dumper->dumpAsPhpArray($this->stub);
         
         $this->assertTrue(is_file($expected_path));
         
@@ -172,6 +172,27 @@ final class CustomNamespaceTest extends TestCase
             'WP_CLI\\Bootstrap\\BarTrait',
             'WP_CLI\\FooTrait',
         ], $classes);
+    }
+    
+    /**
+     * @test
+     */
+    public function files_can_be_dumped_as_json() :void
+    {
+        $expected_path = $this->dump_to.'/exclude-wp-cli-functions.json';
+        
+        $this->assertFalse(is_file($expected_path));
+        
+        $this->dumper->dumpAsJson($this->stub);
+        
+        $this->assertTrue(is_file($expected_path));
+        
+        $functions = json_decode(file_get_contents($expected_path), true);
+        
+        $this->assertSame([
+            'WP_CLI\\foo_func',
+            'WP_CLI\\Utils\\wp_not_installed',
+        ], $functions);
     }
     
     private function cleanDir()

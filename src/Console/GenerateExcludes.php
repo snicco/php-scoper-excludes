@@ -8,6 +8,7 @@ use PhpParser\ParserFactory;
 use PhpParser\Lexer\Emulative;
 use Snicco\PhpScoperExcludes\Option;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
@@ -38,6 +39,12 @@ final class GenerateExcludes extends Command
     {
         $this->repository_root = $repository_root;
         parent::__construct();
+        $this->addOption(
+            'json',
+            null,
+            InputOption::VALUE_NONE,
+            'Dump the excludes as json.',
+        );
     }
     
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -94,9 +101,16 @@ final class GenerateExcludes extends Command
         $progress_bar->setMessage(basename($files[0]));
         $progress_bar->start();
         
+        $json = filter_var($input->getOption('json'), FILTER_VALIDATE_BOOLEAN);
+        
         foreach ($files as $file) {
             $progress_bar->setMessage(basename($file));
-            $generator->dumpForFile($file);
+            if ($json) {
+                $generator->dumpAsJson($file);
+            }
+            else {
+                $generator->dumpAsPhpArray($file);
+            }
             $progress_bar->advance();
         }
         

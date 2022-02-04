@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Snicco\PhpScoperExcludes;
 
+use Closure;
 use RuntimeException;
 use PhpParser\Parser;
 use PhpParser\NodeTraverser;
@@ -19,10 +20,13 @@ use function var_export;
 use function str_replace;
 use function is_writable;
 use function is_readable;
+use function json_encode;
 use function file_get_contents;
 use function file_put_contents;
 
+use const JSON_PRETTY_PRINT;
 use const PATHINFO_EXTENSION;
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @api
@@ -53,7 +57,30 @@ final class ExclusionListGenerator
         $this->root_dir = $root_dir;
     }
     
-    public function dumpForFile(string $file) :void
+    public function dumpAsPhpArray(string $file) :void
+    {
+        $this->dump($file, function (array $exludes, string $file_path) {
+            return file_put_contents(
+                $file_path,
+                '<?php return '.var_export($exludes, true).';'
+            );
+        }, '.php');
+    }
+    
+    public function dumpAsJson(string $file) :void
+    {
+        $this->dump($file, function (array $excludes, $file_path) {
+            $json = json_encode($excludes, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+            return file_put_contents($file_path, $json);
+        }, '.json');
+    }
+    
+    /**
+     * @param  string  $file
+     * @param  Closure(array,string):bool  $save_do_disk
+     * @param  string  $file_extension
+     */
+    private function dump(string $file, Closure $save_do_disk, string $file_extension) :void
     {
         if ( ! is_readable($file)) {
             throw new InvalidArgumentException("File [$file] is not readable.");
@@ -75,12 +102,8 @@ final class ExclusionListGenerator
         $base_name = basename($file);
         
         foreach ($exclude_list as $type => $excludes) {
-            $name = $this->getFileName($type, $base_name);
-            
-            $success = file_put_contents(
-                $name,
-                '<?php return '.var_export($excludes, true).';'
-            );
+            $path = $this->getFileName($type, $base_name, $file_extension);
+            $success = $save_do_disk($excludes, $path);
             
             if (false === $success) {
                 throw new RuntimeException("Could not dump contents for file [$base_name].");
@@ -111,21 +134,21 @@ final class ExclusionListGenerator
         ];
     }
     
-    private function getFileName(string $key, string $file_basename) :string
+    private function getFileName(string $key, string $file_basename, string $extension) :string
     {
         $file_basename = str_replace('-stubs.php', '', $file_basename);
-        $file_basename = str_replace('.php', '', $file_basename);
+        $file_basename = str_replace($extension, '', $file_basename);
         switch ($key) {
             case self::STMT_FUNCTION:
-                return $this->root_dir."/exclude-$file_basename-functions.php";
+                return $this->root_dir."/exclude-$file_basename-functions$extension";
             case self::STMT_CLASS:
-                return $this->root_dir."/exclude-$file_basename-classes.php";
+                return $this->root_dir."/exclude-$file_basename-classes$extension";
             case self::STMT_INTERFACE:
-                return $this->root_dir."/exclude-$file_basename-interfaces.php";
+                return $this->root_dir."/exclude-$file_basename-interfaces$extension";
             case self::STMT_CONST:
-                return $this->root_dir."/exclude-$file_basename-constants.php";
+                return $this->root_dir."/exclude-$file_basename-constants$extension";
             case self::STMT_TRAIT:
-                return $this->root_dir."/exclude-$file_basename-traits.php";
+                return $this->root_dir."/exclude-$file_basename-traits$extension";
             default:
                 throw new RuntimeException("Unknown exclude identifier [$key].");
         }
