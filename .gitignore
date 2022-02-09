@@ -6,4 +6,4 @@
 !/tests/dump/.gitkeep
 .idea
 /generate-excludes.inc.php
-/excludes
+/generated

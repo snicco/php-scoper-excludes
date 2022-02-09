@@ -24,10 +24,13 @@ use function is_array;
 use function basename;
 use function is_string;
 use function array_map;
+use function filter_var;
 use function is_iterable;
 use function array_merge;
 use function array_values;
 use function iterator_to_array;
+
+use const FILTER_VALIDATE_BOOLEAN;
 
 final class GenerateExcludes extends Command
 {
@@ -44,6 +47,12 @@ final class GenerateExcludes extends Command
             null,
             InputOption::VALUE_NONE,
             'Dump the excludes as json.',
+        );
+        $this->addOption(
+            'exclude-empty',
+            null,
+            InputOption::VALUE_NONE,
+            'Require at least one type of(interface,class,trait,constant,function) to be present in order for the file being dumped.',
         );
     }
     
@@ -102,14 +111,15 @@ final class GenerateExcludes extends Command
         $progress_bar->start();
         
         $json = filter_var($input->getOption('json'), FILTER_VALIDATE_BOOLEAN);
+        $exclude_empty = filter_var($input->getOption('exclude-empty'), FILTER_VALIDATE_BOOLEAN);
         
         foreach ($files as $file) {
             $progress_bar->setMessage(basename($file));
             if ($json) {
-                $generator->dumpAsJson($file);
+                $generator->dumpAsJson($file, !$exclude_empty);
             }
             else {
-                $generator->dumpAsPhpArray($file);
+                $generator->dumpAsPhpArray($file, !$exclude_empty);
             }
             $progress_bar->advance();
         }
@@ -122,7 +132,7 @@ final class GenerateExcludes extends Command
                 "Generated exclusion list for %s %s in directory %s.",
                 count($files),
                 count($files) > 1 ? 'files' : 'file',
-                $output_dir
+                $output_dir,
             )
         );
         

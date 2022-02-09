@@ -13,6 +13,8 @@ use Snicco\PhpScoperExcludes\ExclusionListGenerator;
 use function is_dir;
 use function unlink;
 use function is_file;
+use function json_decode;
+use function file_get_contents;
 
 final class GlobalNamespaceTest extends TestCase
 {
@@ -20,10 +22,12 @@ final class GlobalNamespaceTest extends TestCase
     private string                 $stub;
     private string                 $dump_to;
     private ExclusionListGenerator $dumper;
+    private string                 $fixtures_dir;
     
     protected function setUp() :void
     {
         parent::setUp();
+        $this->fixtures_dir = __DIR__.'/fixtures';
         $this->stub = __DIR__.'/fixtures/wordpress-stubs.php';
         $this->dump_to = __DIR__.'/dump';
         
@@ -137,6 +141,60 @@ final class GlobalNamespaceTest extends TestCase
             'DB_USER',
         ], $functions);
     }
+    
+    /**
+     * @test
+     */
+    public function only_files_with_contents_can_be_dumped_as_php_array() :void
+    {
+        $expected_path = $this->dump_to.'/exclude-classes-only-classes.php';
+    
+        $this->assertFalse(is_file($expected_path));
+    
+        $this->dumper->dumpAsPhpArray($this->fixtures_dir.'/classes-only.php', false);
+    
+        $this->assertTrue(is_file($expected_path));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-traits.php'));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-constants.php'));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-functions.php'));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-interfaces.php'));
+    
+        $functions = require_once $expected_path;
+    
+        $this->assertSame([
+            'Bar',
+            'Foo',
+        ], $functions);
+        
+    }
+    
+      /**
+     * @test
+     */
+    public function only_files_with_contents_can_be_dumped_as_json_array() :void
+    {
+        $expected_path = $this->dump_to.'/exclude-classes-only-classes.json';
+    
+        $this->assertFalse(is_file($expected_path));
+    
+        $this->dumper->dumpAsJson($this->fixtures_dir.'/classes-only.php', false);
+    
+        $this->assertTrue(is_file($expected_path));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-traits.json'));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-constants.json'));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-functions.json'));
+        $this->assertFalse(is_file($this->dump_to.'/exclude-classes-only-interfaces.json'));
+    
+        $functions = json_decode(file_get_contents($expected_path));
+    
+        $this->assertSame([
+            'Bar',
+            'Foo',
+        ], $functions);
+        
+    }
+    
+    
     
     private function cleanDir()
     {

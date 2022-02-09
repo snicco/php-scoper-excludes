@@ -13,18 +13,20 @@ use PhpParser\NodeVisitor\NameResolver;
 use Snicco\PhpScoperExcludes\NodeVisitor\Filter;
 use Snicco\PhpScoperExcludes\NodeVisitor\Categorize;
 
+use function count;
 use function is_dir;
 use function pathinfo;
-use function basename;
 use function var_export;
 use function str_replace;
 use function is_writable;
 use function is_readable;
 use function json_encode;
+use function array_filter;
 use function file_get_contents;
 use function file_put_contents;
 
 use const JSON_PRETTY_PRINT;
+use const PATHINFO_FILENAME;
 use const PATHINFO_EXTENSION;
 use const JSON_THROW_ON_ERROR;
 
@@ -57,30 +59,28 @@ final class ExclusionListGenerator
         $this->root_dir = $root_dir;
     }
     
-    public function dumpAsPhpArray(string $file) :void
+    public function dumpAsPhpArray(string $file, bool $include_empty = true) :void
     {
         $this->dump($file, function (array $exludes, string $file_path) {
             return file_put_contents(
                 $file_path,
                 '<?php return '.var_export($exludes, true).';'
             );
-        }, '.php');
+        }, '.php', $include_empty);
     }
     
-    public function dumpAsJson(string $file) :void
+    public function dumpAsJson(string $file, bool $include_empty = true) :void
     {
         $this->dump($file, function (array $excludes, $file_path) {
             $json = json_encode($excludes, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
             return file_put_contents($file_path, $json);
-        }, '.json');
+        }, '.json', $include_empty);
     }
     
     /**
-     * @param  string  $file
      * @param  Closure(array,string):bool  $save_do_disk
-     * @param  string  $file_extension
      */
-    private function dump(string $file, Closure $save_do_disk, string $file_extension) :void
+    private function dump(string $file, Closure $save_do_disk, string $file_extension, bool $include_empty) :void
     {
         if ( ! is_readable($file)) {
             throw new InvalidArgumentException("File [$file] is not readable.");
@@ -99,9 +99,14 @@ final class ExclusionListGenerator
         
         $exclude_list = $this->generateExcludeList($content);
         
-        $base_name = basename($file);
+        $base_name = pathinfo($file, PATHINFO_FILENAME);
+        
+        if(!$include_empty){
+            $exclude_list = array_filter($exclude_list, fn(array $arr) => count($arr));
+        }
         
         foreach ($exclude_list as $type => $excludes) {
+            
             $path = $this->getFileName($type, $base_name, $file_extension);
             $success = $save_do_disk($excludes, $path);
             
@@ -136,7 +141,7 @@ final class ExclusionListGenerator
     
     private function getFileName(string $key, string $file_basename, string $extension) :string
     {
-        $file_basename = str_replace('-stubs.php', '', $file_basename);
+        $file_basename = str_replace('-stubs', '', $file_basename);
         $file_basename = str_replace($extension, '', $file_basename);
         switch ($key) {
             case self::STMT_FUNCTION:
